@@ -10,17 +10,87 @@ from pathlib import Path
 class VideoSplitterApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("🎥 Розділювач Відео за Розмірами")
-        self.root.geometry("1200x700")
-        self.root.configure(bg="#f0f0f0")
-        
+        self.language_var = StringVar(value="uk")
+        self.translations = {
+            "title": {"uk": "🎥 Розділювач Відео за Розмірами Одягу", "en": "🎥 Video Splitter by Size"},
+            "video_section": {"uk": "1. Вибір матеріалу", "en": "1. Choose source"},
+            "video_label": {"uk": "Відео:", "en": "Video:"},
+            "video_none": {"uk": "Не вибрано...", "en": "No video selected..."},
+            "browse_video": {"uk": "📂 Вибрати відео", "en": "📂 Select video"},
+            "music_label": {"uk": "Фонова музика:", "en": "Background music:"},
+            "music_none": {"uk": "Не вибрана...", "en": "None selected..."},
+            "browse_music": {"uk": "🎵 Вибрати музику", "en": "🎵 Select music"},
+            "output_section": {"uk": "2. Папка збереження", "en": "2. Save folder"},
+            "output_browse": {"uk": "📂", "en": "📂"},
+            "params_section": {"uk": "3. Параметри", "en": "3. Settings"},
+            "min_segment": {"uk": "Мін. довжина маркера (сек):", "en": "Min marker length (sec):"},
+            "volume": {"uk": "Гучність музики:", "en": "Music volume:"},
+            "model_label": {"uk": "Модель розпізнавання:", "en": "Recognition model:"},
+            "subtitles_option": {"uk": "🎬 Додати субтитри на відео", "en": "🎬 Add subtitles to video"},
+            "progress": {"uk": "Прогрес:", "en": "Progress:"},
+            "start_button": {"uk": "▶ Почати", "en": "▶ Start"},
+            "clear_button": {"uk": "🗑 Очистити", "en": "🗑 Clear"},
+            "log_label": {"uk": "Лог:", "en": "Log:"},
+            "select_video_error": {"uk": "Будь ласка, оберіть відео!", "en": "Please select a video!"},
+            "processing_warning": {"uk": "Обробка вже йде...", "en": "Processing is already running..."},
+            "processing_title": {"uk": "🎥 РОЗДІЛЮВАЧ ВІДЕО ЗА РОЗМІРАМИ ОДЯГУ", "en": "🎥 VIDEO SPLITTER BY SIZE"},
+            "transcribing": {"uk": "📢 Крок 1: Розпізнавання мови у відео...\n", "en": "📢 Step 1: Transcribing audio...\n"},
+            "found_segments": {"uk": "✓ Знайдено {count} сегментів тексту\n", "en": "✓ Found {count} text segments\n"},
+            "searching_markers": {"uk": "🔍 Крок 2: Пошук маркерів розмірів...\n", "en": "🔍 Step 2: Searching for size markers...\n"},
+            "prepare_subtitles": {"uk": "✏️ Підготовка тексту для субтитрів...\n", "en": "✏️ Preparing subtitle text...\n"},
+            "cutting_video": {"uk": "✂️  Крок 3: Нарізання відео...\n", "en": "✂️  Step 3: Cutting video...\n"},
+            "process_complete": {"uk": "\n✅ Готово! Файли збережено.", "en": "\n✅ Done! Files saved."},
+            "success_title": {"uk": "Успіх", "en": "Success"},
+            "error_title": {"uk": "Помилка", "en": "Error"},
+            "processing_error": {"uk": "Сталася помилка:\n{msg}", "en": "An error occurred:\n{msg}"},
+            "loading_model": {"uk": "Завантаження моделі Whisper...", "en": "Loading Whisper model..."},
+            "analyzing": {"uk": "Аналіз відеофіксації...", "en": "Analyzing video..."},
+            "created_folder": {"uk": "📁 Створена папка: {folder}\n", "en": "📁 Created folder: {folder}\n"},
+            "duration": {"uk": "📹 Загальна тривалість: {duration:.2f}с\n", "en": "📹 Total duration: {duration:.2f}s\n"},
+            "fragment": {"uk": "🎬 Фрагмент {current}/{total}", "en": "🎬 Clip {current}/{total}"},
+            "subtitles_creating": {"uk": "   📝 Створення субтитрів...", "en": "   📝 Creating subtitles..."},
+            "music_adding": {"uk": "   🎵 Накладання музики...", "en": "   🎵 Adding music..."},
+            "done_saving": {"uk": "✅ Усі файли збережено в: {folder}/", "en": "✅ All files saved in: {folder}/"},
+            "warning_metadata": {"uk": "⚠️  Помилка при додаванні метаданих: {msg}", "en": "⚠️  Metadata add error: {msg}"},
+            "warning_srt": {"uk": "⚠️  Помилка при створенні SRT: {msg}", "en": "⚠️  Error creating SRT: {msg}"},
+            "warning_subtitles": {"uk": "⚠️  Помилка при накладанні субтитрів: {msg}", "en": "⚠️  Error overlaying subtitles: {msg}"},
+            "warning_adjust": {"uk": "⚠️  Помилка при коригуванні SRT: {msg}", "en": "⚠️  Error adjusting SRT: {msg}"},
+            "language_menu": {"uk": "Мова", "en": "Language"},
+            "language_uk": {"uk": "Українська", "en": "Ukrainian"},
+            "language_en": {"uk": "Англійська", "en": "English"},
+            "editor_title": {"uk": "Редагування тексту субтитрів", "en": "Subtitle text editor"},
+            "editor_info": {"uk": "Відредагуйте текст для кожного фрагмента перед додаванням субтитрів:", "en": "Edit the text for each clip before adding subtitles:"},
+            "editor_segment": {"uk": "Текст фрагмента:", "en": "Clip text:"},
+            "editor_save": {"uk": "Зберегти і продовжити", "en": "Save and continue"},
+            "no_markers": {"uk": "❌ Маркери розмірів не знайдені.", "en": "❌ No size markers found."},
+            "select_music_cancel": {"uk": "Музика скасована", "en": "Music canceled"},
+            "video_selected": {"uk": "Обраний файл: {path}", "en": "Selected video: {path}"},
+            "music_selected": {"uk": "Обрана музика: {path}", "en": "Selected music: {path}"},
+            "folder_selected": {"uk": "Папка збереження: {path}", "en": "Output folder: {path}"}
+        }
+        self.language_menu_index = None
+        self.menu_bar = None
+        self.language_menu = None
         self.video_path = StringVar()
         self.music_path = StringVar()
         self.output_folder = StringVar(value="output_clips")
         self.music_volume = DoubleVar(value=0.3)  # 30% за замовчуванням
         self.subtitles_var = BooleanVar(value=False)
         self.is_running = False
-        
+
+        self.root.title(self.t("title"))
+        self.root.geometry("1200x700")
+        self.root.configure(bg="#f0f0f0")
+        self.root.option_add('*tearOff', FALSE)
+
+        self.menu_bar = Menu(self.root)
+        self.language_menu = Menu(self.menu_bar, tearoff=0)
+        self.language_menu.add_radiobutton(label=self.t("language_uk"), variable=self.language_var, value="uk", command=self.update_ui_language)
+        self.language_menu.add_radiobutton(label=self.t("language_en"), variable=self.language_var, value="en", command=self.update_ui_language)
+        self.menu_bar.add_cascade(label=self.t("language_menu"), menu=self.language_menu)
+        self.language_menu_index = self.menu_bar.index("end")
+        self.root.config(menu=self.menu_bar)
+
         self.setup_ui()
         
     def setup_ui(self):
@@ -29,14 +99,14 @@ class VideoSplitterApp:
         title_frame = Frame(self.root, bg="#2c3e50", pady=15)
         title_frame.pack(fill=X)
         
-        title_label = Label(
+        self.title_label = Label(
             title_frame,
-            text="🎥 Розділювач Відео за Розмірами Одягу",
+            text=self.t("title"),
             font=("Arial", 16, "bold"),
             bg="#2c3e50",
             fg="white"
         )
-        title_label.pack()
+        self.title_label.pack()
         
         # Основна панель з двома колонами
         main_frame = Frame(self.root, bg="#f0f0f0")
@@ -47,17 +117,17 @@ class VideoSplitterApp:
         left_frame.pack(side=LEFT, fill=BOTH, expand=True, padx=(0, 10))
         
         # Вибір відео
-        video_label = Label(left_frame, text="1. Вибір матеріалу", font=("Arial", 12, "bold"), bg="#f0f0f0")
-        video_label.pack(anchor=W, pady=(0, 10))
+        self.video_label = Label(left_frame, text=self.t("video_section"), font=("Arial", 12, "bold"), bg="#f0f0f0")
+        self.video_label.pack(anchor=W, pady=(0, 10))
         
         video_box = Frame(left_frame, bg="white", relief=SUNKEN, bd=1, padx=10, pady=10)
         video_box.pack(fill=X, pady=(0, 15))
         
-        Label(video_box, text="Відео:", font=("Arial", 10, "bold"), bg="white").pack(anchor=W)
+        Label(video_box, text=self.t("video_label"), font=("Arial", 10, "bold"), bg="white").pack(anchor=W)
         
         self.video_display = Label(
             video_box,
-            text="Не вибрано...",
+            text=self.t("video_none"),
             font=("Arial", 9),
             bg="white",
             fg="#666",
@@ -66,9 +136,9 @@ class VideoSplitterApp:
         )
         self.video_display.pack(fill=X, pady=(5, 10), anchor=W)
         
-        browse_btn = Button(
+        self.browse_btn = Button(
             video_box,
-            text="📂 Вибрати відео",
+            text=self.t("browse_video"),
             command=self.select_video,
             bg="#3498db",
             fg="white",
@@ -77,14 +147,15 @@ class VideoSplitterApp:
             pady=6,
             relief=FLAT
         )
-        browse_btn.pack(anchor=W, pady=(0, 10))
+        self.browse_btn.pack(anchor=W, pady=(0, 10))
         
         # Музика
-        Label(video_box, text="Фонова музика:", font=("Arial", 10, "bold"), bg="white").pack(anchor=W, pady=(10, 0))
-        
+        self.music_label = Label(video_box, text=self.t("music_label"), font=("Arial", 10, "bold"), bg="white")
+        self.music_label.pack(anchor=W, pady=(10, 0))
+
         self.music_display = Label(
             video_box,
-            text="Не вибрана...",
+            text=self.t("music_none"),
             font=("Arial", 9),
             bg="white",
             fg="#666",
@@ -93,9 +164,9 @@ class VideoSplitterApp:
         )
         self.music_display.pack(fill=X, pady=(5, 10), anchor=W)
         
-        music_btn = Button(
+        self.music_btn = Button(
             video_box,
-            text="🎵 Вибрати музику",
+            text=self.t("browse_music"),
             command=self.select_music,
             bg="#9b59b6",
             fg="white",
@@ -104,11 +175,11 @@ class VideoSplitterApp:
             pady=6,
             relief=FLAT
         )
-        music_btn.pack(anchor=W)
+        self.music_btn.pack(anchor=W)
         
         # Папка збереження
-        output_label = Label(left_frame, text="2. Папка збереження", font=("Arial", 12, "bold"), bg="#f0f0f0")
-        output_label.pack(anchor=W, pady=(10, 10))
+        self.output_label = Label(left_frame, text=self.t("output_section"), font=("Arial", 12, "bold"), bg="#f0f0f0")
+        self.output_label.pack(anchor=W, pady=(10, 10))
         
         output_frame = Frame(left_frame, bg="white", relief=SUNKEN, bd=1, padx=10, pady=10)
         output_frame.pack(fill=X, pady=(0, 15))
@@ -122,9 +193,9 @@ class VideoSplitterApp:
         )
         output_entry.pack(fill=X, side=LEFT, expand=True, padx=(0, 5))
         
-        output_btn = Button(
+        self.output_btn = Button(
             output_frame,
-            text="📂",
+            text=self.t("output_browse"),
             command=self.select_output_folder,
             bg="#3498db",
             fg="white",
@@ -133,22 +204,22 @@ class VideoSplitterApp:
             pady=5,
             relief=FLAT
         )
-        output_btn.pack(side=LEFT)
+        self.output_btn.pack(side=LEFT)
         
         # === ПРАВА КОЛОНА ===
         right_frame = Frame(main_frame, bg="#f0f0f0")
         right_frame.pack(side=LEFT, fill=BOTH, expand=True, padx=(10, 0))
         
         # Параметри
-        params_label = Label(right_frame, text="3. Параметри", font=("Arial", 12, "bold"), bg="#f0f0f0")
-        params_label.pack(anchor=W, pady=(0, 10))
+        self.params_label = Label(right_frame, text=self.t("params_section"), font=("Arial", 12, "bold"), bg="#f0f0f0")
+        self.params_label.pack(anchor=W, pady=(0, 10))
         
         params_frame = Frame(right_frame, bg="white", relief=SUNKEN, bd=1, padx=15, pady=15)
         params_frame.pack(fill=BOTH, expand=True, pady=(0, 15))
         
         # Мінімальна довжина маркера
-        min_seg_label = Label(params_frame, text="Мін. довжина маркера (сек):", font=("Arial", 10), bg="white")
-        min_seg_label.pack(anchor=W, pady=(0, 5))
+        self.min_seg_label = Label(params_frame, text=self.t("min_segment"), font=("Arial", 10), bg="white")
+        self.min_seg_label.pack(anchor=W, pady=(0, 5))
         
         self.min_segment = DoubleVar(value=7.0)
         min_seg_scale = Scale(
@@ -163,8 +234,8 @@ class VideoSplitterApp:
         min_seg_scale.pack(fill=X, pady=(0, 20))
         
         # Гучність музики
-        volume_label = Label(params_frame, text="Гучність музики:", font=("Arial", 10), bg="white")
-        volume_label.pack(anchor=W, pady=(0, 5))
+        self.volume_label = Label(params_frame, text=self.t("volume"), font=("Arial", 10), bg="white")
+        self.volume_label.pack(anchor=W, pady=(0, 5))
         
         volume_frame = Frame(params_frame, bg="white")
         volume_frame.pack(fill=X, pady=(0, 20))
@@ -185,8 +256,8 @@ class VideoSplitterApp:
         self.volume_percent.pack(side=LEFT)
         
         # Модель Whisper
-        model_label = Label(params_frame, text="Модель розпізнавання:", font=("Arial", 10), bg="white")
-        model_label.pack(anchor=W, pady=(0, 10))
+        self.model_label = Label(params_frame, text=self.t("model_label"), font=("Arial", 10), bg="white")
+        self.model_label.pack(anchor=W, pady=(0, 10))
         
         self.model_var = StringVar(value="small")
         model_frame = Frame(params_frame, bg="white")
@@ -205,15 +276,15 @@ class VideoSplitterApp:
         
         # Субтитри
         self.subtitles_var = BooleanVar(value=False)
-        subtitles_cb = Checkbutton(
+        self.subtitles_cb = Checkbutton(
             params_frame,
-            text="🎬 Додати субтитри на відео",
+            text=self.t("subtitles_option"),
             variable=self.subtitles_var,
             bg="white",
             font=("Arial", 10),
             pady=10
         )
-        subtitles_cb.pack(anchor=W)
+        self.subtitles_cb.pack(anchor=W)
         
         # === НИЖНЯ ПАНЕЛЬ ===
         bottom_frame = Frame(self.root, bg="#f0f0f0")
@@ -227,8 +298,8 @@ class VideoSplitterApp:
         progress_left = Frame(progress_frame, bg="#f0f0f0")
         progress_left.pack(side=LEFT, fill=BOTH, expand=True, padx=(0, 10))
         
-        progress_label = Label(progress_left, text="Прогрес:", font=("Arial", 11, "bold"), bg="#f0f0f0")
-        progress_label.pack(anchor=W, pady=(0, 5))
+        self.progress_label = Label(progress_left, text=self.t("progress"), font=("Arial", 11, "bold"), bg="#f0f0f0")
+        self.progress_label.pack(anchor=W, pady=(0, 5))
         
         self.progress_bar = ttk.Progressbar(
             progress_left,
@@ -243,7 +314,7 @@ class VideoSplitterApp:
         
         self.start_btn = Button(
             button_frame,
-            text="▶ Почати",
+            text=self.t("start_button"),
             command=self.start_processing,
             bg="#27ae60",
             fg="white",
@@ -254,9 +325,9 @@ class VideoSplitterApp:
         )
         self.start_btn.pack(side=LEFT, padx=(0, 8))
         
-        clear_btn = Button(
+        self.clear_btn = Button(
             button_frame,
-            text="🗑 Очистити",
+            text=self.t("clear_button"),
             command=self.clear_log,
             bg="#95a5a6",
             fg="white",
@@ -265,11 +336,11 @@ class VideoSplitterApp:
             pady=10,
             relief=FLAT
         )
-        clear_btn.pack(side=LEFT)
+        self.clear_btn.pack(side=LEFT)
         
         # Логи (під прогресом)
-        log_label = Label(bottom_frame, text="Лог:", font=("Arial", 11, "bold"), bg="#f0f0f0")
-        log_label.pack(anchor=W, pady=(10, 5))
+        self.log_label = Label(bottom_frame, text=self.t("log_label"), font=("Arial", 11, "bold"), bg="#f0f0f0")
+        self.log_label.pack(anchor=W, pady=(10, 5))
         
         self.status_text = Text(
             bottom_frame,
@@ -281,6 +352,33 @@ class VideoSplitterApp:
         )
         self.status_text.pack(fill=BOTH, expand=True)
     
+    def t(self, key, **kwargs):
+        value = self.translations.get(key, {}).get(self.language_var.get(), key)
+        return value.format(**kwargs)
+
+    def update_ui_language(self):
+        self.root.title(self.t("title"))
+        self.menu_bar.entryconfig(self.language_menu_index, label=self.t("language_menu"))
+        self.language_menu.entryconfig(0, label=self.t("language_uk"))
+        self.language_menu.entryconfig(1, label=self.t("language_en"))
+        self.title_label.config(text=self.t("title"))
+        self.video_label.config(text=self.t("video_section"))
+        self.music_btn.config(text=self.t("browse_music"))
+        self.music_label.config(text=self.t("music_label"))
+        self.output_label.config(text=self.t("output_section"))
+        self.output_btn.config(text=self.t("output_browse"))
+        self.params_label.config(text=self.t("params_section"))
+        self.min_seg_label.config(text=self.t("min_segment"))
+        self.volume_label.config(text=self.t("volume"))
+        self.model_label.config(text=self.t("model_label"))
+        self.subtitles_cb.config(text=self.t("subtitles_option"))
+        self.progress_label.config(text=self.t("progress"))
+        self.start_btn.config(text=self.t("start_button"))
+        self.clear_btn.config(text=self.t("clear_button"))
+        self.log_label.config(text=self.t("log_label"))
+        self.video_display.config(text=self.t("video_none"))
+        self.music_display.config(text=self.t("music_none"))
+
     def select_video(self):
         """Вибирає файл відео."""
         file_path = filedialog.askopenfilename(
@@ -290,7 +388,7 @@ class VideoSplitterApp:
             self.video_path.set(file_path)
             file_name = os.path.basename(file_path)
             self.video_display.config(text=f"✓ {file_name}")
-            self.log(f"Обраний файл: {file_path}")
+            self.log(self.t("video_selected", path=file_path))
     
     def select_music(self):
         """Вибирає файл музики."""
@@ -301,11 +399,11 @@ class VideoSplitterApp:
             self.music_path.set(file_path)
             file_name = os.path.basename(file_path)
             self.music_display.config(text=f"✓ {file_name}")
-            self.log(f"Обрана музика: {file_path}")
+            self.log(self.t("music_selected", path=file_path))
         else:
             self.music_path.set("")
-            self.music_display.config(text="Музика не вибрана...")
-            self.log("Музика скасована")
+            self.music_display.config(text=self.t("music_none"))
+            self.log(self.t("select_music_cancel"))
     
     def update_volume_label(self, value):
         """Оновлює текст гучності."""
@@ -316,7 +414,7 @@ class VideoSplitterApp:
         folder = filedialog.askdirectory()
         if folder:
             self.output_folder.set(folder)
-            self.log(f"Папка збереження: {folder}")
+            self.log(self.t("folder_selected", path=folder))
     
     def log(self, message):
         """Додає повідомлення в лог."""
@@ -331,11 +429,11 @@ class VideoSplitterApp:
     def start_processing(self):
         """Запускає обробку в окремому потоці."""
         if not self.video_path.get():
-            messagebox.showerror("Помилка", "Будь ласка, оберіть відео!")
+            messagebox.showerror(self.t("error_title"), self.t("select_video_error"))
             return
         
         if self.is_running:
-            messagebox.showwarning("Увага", "Обробка вже йде...")
+            messagebox.showwarning(self.t("error_title"), self.t("processing_warning"))
             return
         
         self.is_running = True
@@ -361,24 +459,32 @@ class VideoSplitterApp:
             add_subtitles = self.subtitles_var.get()
             
             # 1. Розпізнавання мови
-            self.log("📢 Крок 1: Розпізнання мови у відео...\n")
+            self.log(self.t("transcribing"))
             segments = self.transcribe_video(video_path, model_name)
-            self.log(f"✓ Знайдено {len(segments)} сегментів тексту\n")
+            self.log(self.t("found_segments", count=len(segments)))
             
             # 2. Пошук маркерів
-            self.log("🔍 Крок 2: Пошук маркерів розмірів...\n")
+            self.log(self.t("searching_markers"))
             split_points = self.extract_split_points(segments, min_segment_length)
             
+            # 2.5. Якщо потрібні субтитри, даємо можливість відредагувати текст
+            if add_subtitles and split_points:
+                self.log(self.t("prepare_subtitles"))
+                edit_done_event = threading.Event()
+                self.root.after(0, lambda: self.open_subtitles_editor(split_points, edit_done_event))
+                edit_done_event.wait()
+                self.log(self.t("found_segments", count=len(split_points)))
+            
             # 3. Нарізання
-            self.log("✂️  Крок 3: Нарізання відео...\n")
+            self.log(self.t("cutting_video"))
             self.cut_video_by_timestamps(video_path, split_points, output_folder, add_subtitles)
             
-            self.log("\n✅ Готово! Файли збережено.")
-            messagebox.showinfo("Успіх", "Обробка завершена!")
+            self.log(self.t("process_complete"))
+            messagebox.showinfo(self.t("success_title"), self.t("process_complete"))
             
         except Exception as e:
-            self.log(f"\n❌ Помилка: {str(e)}")
-            messagebox.showerror("Помилка", f"Сталася помилка:\n{str(e)}")
+            self.log(f"\n❌ {self.t('processing_error', msg=str(e))}")
+            messagebox.showerror(self.t("error_title"), self.t("processing_error", msg=str(e)))
         
         finally:
             self.is_running = False
@@ -387,10 +493,10 @@ class VideoSplitterApp:
     
     def transcribe_video(self, video_path, model_name="small"):
         """Розпізнає текст у відео."""
-        self.log("Завантаження моделі Whisper...")
+        self.log(self.t("loading_model"))
         model = whisper.load_model(model_name)
         
-        self.log(f"Аналіз відеофіксації...")
+        self.log(self.t("analyzing"))
         result = model.transcribe(video_path, fp16=False, language="uk")
         return result["segments"]
     
@@ -449,7 +555,7 @@ class VideoSplitterApp:
                         "pattern": marker_type,
                         "full_text": ""  # Для накопичування всього тексту
                     })
-                    self.log(f"✓ [{start_time:.2f}с] ({marker_type}): «{text}»")
+                    self.log(f"✓ [{start_time:.2f}s] ({marker_type}): «{text}»")
                     last_marker_time = start_time
         
         # Накопичуємо весь текст для кожного фрагменту
@@ -481,12 +587,12 @@ class VideoSplitterApp:
     def cut_video_by_timestamps(self, video_path, split_points, output_folder="output_clips", add_subtitles=False):
         """Нарізає відео і накладає музику."""
         if not split_points:
-            self.log("❌ Маркери розмірів не знайдені.")
+            self.log(self.t("no_markers"))
             return
         
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
-            self.log(f"📁 Створена папка: {output_folder}\n")
+            self.log(self.t("created_folder", folder=output_folder))
         
         music_path = self.music_path.get()
         
@@ -621,7 +727,7 @@ class VideoSplitterApp:
             os.remove(video_path)
             os.rename(temp_file, video_path)
         except Exception as e:
-            self.log(f"⚠️  Помилка при додаванні метаданих: {str(e)}")
+            self.log(self.t("warning_metadata", msg=str(e)))
     
     def create_srt_file(self, srt_path, text, start_time, end_time):
         """Створює SRT файл для субтитрів."""
@@ -657,8 +763,80 @@ class VideoSplitterApp:
             with open(srt_path, 'w', encoding='utf-8') as f:
                 f.write(srt_content)
         except Exception as e:
-            self.log(f"⚠️  Помилка при створенні SRT: {str(e)}")
-    
+            self.log(self.t("warning_srt", msg=str(e)))
+
+    def open_subtitles_editor(self, split_points, done_event):
+        """Відкриває вікно для редагування тексту субтитрів перед підготовкою файлів."""
+        editor = Toplevel(self.root)
+        editor.title("Редагування тексту субтитрів")
+        editor.geometry("950x550")
+        editor.transient(self.root)
+        editor.grab_set()
+
+        info_label = Label(editor, text="Відредагуйте текст для кожного фрагмента перед додаванням субтитрів:", font=("Arial", 11, "bold"))
+        info_label.pack(anchor=W, padx=10, pady=10)
+
+        editor_frame = Frame(editor)
+        editor_frame.pack(fill=BOTH, expand=True, padx=10, pady=(0, 10))
+
+        list_frame = Frame(editor_frame)
+        list_frame.pack(side=LEFT, fill=Y, padx=(0, 10), pady=5)
+
+        listbox = Listbox(list_frame, width=40, height=24, exportselection=False)
+        listbox.pack(fill=Y, expand=True)
+
+        for i, point in enumerate(split_points):
+            label = f"{i+1}: [{point['start']:.2f}s] {point['pattern']}"
+            listbox.insert(END, label)
+
+        text_frame = Frame(editor_frame)
+        text_frame.pack(side=LEFT, fill=BOTH, expand=True, pady=5)
+
+        segment_label = Label(text_frame, text="Текст фрагмента:", font=("Arial", 10, "bold"))
+        segment_label.pack(anchor=W)
+
+        text_widget = Text(text_frame, wrap=WORD, font=("Arial", 10), bg="white", relief=SUNKEN, bd=1)
+        text_widget.pack(fill=BOTH, expand=True)
+
+        selected_index = {"value": 0}
+
+        def save_current_text():
+            idx = selected_index["value"]
+            if 0 <= idx < len(split_points):
+                split_points[idx]["full_text"] = text_widget.get("1.0", END).strip()
+
+        def load_selected_text(event=None):
+            if not listbox.curselection():
+                return
+            save_current_text()
+            idx = listbox.curselection()[0]
+            selected_index["value"] = idx
+            text_widget.delete("1.0", END)
+            text_widget.insert(END, split_points[idx].get("full_text") or split_points[idx].get("text", ""))
+            segment_label.config(text=f"Текст фрагмента {idx+1}: {split_points[idx]['pattern']}")
+
+        def finish_editing():
+            save_current_text()
+            editor.grab_release()
+            editor.destroy()
+            done_event.set()
+
+        listbox.bind("<<ListboxSelect>>", load_selected_text)
+        if split_points:
+            listbox.selection_set(0)
+            load_selected_text()
+
+        button_frame = Frame(editor)
+        button_frame.pack(fill=X, pady=(0, 10), padx=10)
+
+        save_btn = Button(button_frame, text="Зберегти і продовжити", command=finish_editing, bg="#27ae60", fg="white", font=("Arial", 10, "bold"), padx=15, pady=8)
+        save_btn.pack(side=RIGHT)
+
+        def on_close():
+            finish_editing()
+
+        editor.protocol("WM_DELETE_WINDOW", on_close)
+
     def format_time(self, seconds):
         """Перетворює секунди у формат SRT (HH:MM:SS,mmm)."""
         hours = int(seconds // 3600)
@@ -686,7 +864,7 @@ class VideoSplitterApp:
             subprocess.run(cmd, capture_output=True, check=True, timeout=300)
             os.remove(adjusted_srt)
         except Exception as e:
-            self.log(f"⚠️  Помилка при накладанні субтитрів: {str(e)}")
+            self.log(self.t("warning_subtitles", msg=str(e)))
     
     def adjust_srt_timing(self, input_srt, output_srt, offset):
         """Коригує таймкоди в SRT файлі."""
@@ -718,7 +896,7 @@ class VideoSplitterApp:
             with open(output_srt, 'w', encoding='utf-8') as f:
                 f.write(adjusted_content)
         except Exception as e:
-            self.log(f"⚠️  Помилка при коригуванні SRT: {str(e)}")
+            self.log(self.t("warning_adjust", msg=str(e)))
     
     def srt_time_to_seconds(self, time_str):
         """Перетворює SRT час (HH:MM:SS,mmm) у секунди."""
